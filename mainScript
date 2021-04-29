@@ -1,0 +1,62 @@
+import maya.cmds as cmds
+
+brick_courses = 0
+brick_calculation = 75 # CHANGE NUMBER HERE FOR CM OR M INSTEAD OF MM MEASUREMENTS
+brick_height = brick_courses * brick_calculation
+wall_length = 0
+
+def wall_maker():
+
+	
+
+	if (cmds.window("wallMaker", exists=True)):
+		cmds.deleteUI("wallMaker")
+
+	cmds.confirmDialog( t='Millimeter Check', message='Please check your linear units are set to millimeters\nbefore using.', button=['Ok'], defaultButton='Yes', dismissString='No' ) # IF YOU DON'T WANT THE CHECK AT START DELETE THIS LINE
+
+	wall_maker = cmds.window("wallMaker", t="Wall Creator")
+
+	cmds.rowColumnLayout( numberOfColumns=2, columnAttach=(1, 'right', 0), columnWidth=[(1, 135), (2, 330)] )
+	cmds.text( label='Brick Course Amount: ' )
+	brick_courses = cmds.textField('textField_courses')
+
+	cmds.text( label='Wall Length: ' )
+	brick_courses = cmds.textField('textField_length')
+	
+	cmds.separator(h=10, style='none')
+	cmds.columnLayout( adjustableColumn=True)
+	cmds.button( label='Create Wall', align='center', c=(create_wall))
+
+	cmds.columnLayout( adjustableColumn=True)
+	cmds.button( label='Create Guide', align='center', c=(create_guide))
+
+	cmds.showWindow( wall_maker )
+	
+def create_wall(*args):
+	
+	brick_courses = cmds.textField('textField_courses', q=True, text=True)
+	brick_length = cmds.textField('textField_length', q=True, text=True)
+
+	brick_height = int (brick_courses) * int(brick_calculation)
+	brick_length = float (brick_length)
+
+
+	cmds.polyCube( n='HouseWall_001', sx=1, sy=1, sz=1, h=brick_height, w=brick_length, d=1 )
+	cmds.deleteUI("wallMaker") # IF YOU WANT THE WINDOW TO STAY OPEN AFTER CREATING WALL DELETE THIS LINE
+	print("Wall Made")
+
+def create_guide(*args):
+	
+	brick_courses = cmds.textField('textField_courses', q=True, text=True)
+	brick_length = cmds.textField('textField_length', q=True, text=True)
+
+	brick_height = int (brick_courses) * int(brick_calculation)
+	brick_length = float (brick_length)
+
+
+	cmds.polyCube( n='Guide_001', sx=1, sy=1, sz=1, h=brick_height, w=brick_length, d=2 )
+	cmds.deleteUI("wallMaker") # IF YOU WANT THE WINDOW TO STAY OPEN AFTER CREATING GUIDE DELETE THIS LINE
+	print("Guide Made")
+
+
+wall_maker()
