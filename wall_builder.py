@@ -33,8 +33,6 @@ def CreateWallPlane(course_value, wall_length_value, *args):
     if cmds.currentUnit(query=True, linear=True) != "centimeter":
         GetCurrentMeasurements()
         cmds.currentUnit(linear="centimeter")
-        meme = cmds.currentUnit(query=True, linear=True)
-        print(meme)
     brick_course_amount = round(course_value)
     WALL_DEFAULT_LENGTH = round(wall_length_value, 2)
     BRICK_COURSES = brick_course_amount * float(7.5)
@@ -48,7 +46,7 @@ def CreateWallPlane(course_value, wall_length_value, *args):
     cmds.textField(custom_plane_name, edit=True, text="")
     cmds.currentUnit(linear=SCENE_MEASUREMENT_UNITS)
 
-# This function gets the current measurement units set in the scene.
+
 def GetCurrentMeasurements():
     try:
         SCENE_MEASUREMENT_UNITS = cmds.currentUnit(query=True, linear=True)
@@ -63,7 +61,6 @@ def GetCurrentMeasurements():
 CheckWindowExists()
 GetCurrentMeasurements()
 
-# Creating the window
 builderWindow = cmds.window(WINDOW_CHECK, title=WINDOW_TITLE, widthHeight=(WINDOW_WIDTH, WINDOW_HEIGHT),
                             maximizeButton=False, resizeToFitChildren=True)
 
