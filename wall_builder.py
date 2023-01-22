@@ -1,90 +1,148 @@
-import maya.cmds as cmds
-import maya.OpenMaya as om
+# -------------------------- IMPORTS
+from maya import cmds
 
-brick_courses_default = 0 # Defaults
-wall_length_default = 0
+# -------------------------- VARIABLES
+WINDOW_HEIGHT = 220
+WINDOW_WIDTH = 515
+WINDOW_TITLE = "Wall Builder"
+WINDOW_CHECK = "mayaWallBuilder"
+
+BRICK_COURSES = 0
+WALL_DEFAULT_LENGTH = 0
+
+# -------------------------- FUNCTIONS
+# This function checks if the window specified by WINDOW_CHECK exists and if it does, it deletes it.  
+def CheckWindowExists():
+    if (cmds.window(WINDOW_CHECK, exists=True)):
+        cmds.deleteUI(WINDOW_CHECK)
+
+# This function updates the brick course and wall length input fields in the UI based on the values from the sliders.
+def UpdateWallInputs(*args):
+    try:
+        course_value = cmds.floatSlider(brick_course_slider, query=True, value=True)
+        cmds.text(brick_course_text, edit=True, label="" + str(round(course_value)))
+        wall_length_value = cmds.floatSlider(wall_length_slider, query=True, value=True)
+        cmds.floatField(wall_length_text, edit=True, value=round(wall_length_value, 2))
+    except ValueError as e:
+        cmds.warning("Invalid value entered for brick course or wall length: {}".format(e))
+    except TypeError as e:
+        cmds.warning("Invalid type entered for brick course or wall length: {}".format(e))
+
+# This function creates a wall plane with the specified number of brick courses and wall length using the polyPlane command.
+def CreateWallPlane(course_value, wall_length_value, *args): 
+    if cmds.currentUnit(query=True, linear=True) != "centimeter":
+        GetCurrentMeasurements()
+        cmds.currentUnit(linear="centimeter")
+        meme = cmds.currentUnit(query=True, linear=True)
+        print(meme)
+    brick_course_amount = round(course_value)
+    WALL_DEFAULT_LENGTH = round(wall_length_value, 2)
+    BRICK_COURSES = brick_course_amount * float(7.5)
+
+    name_value = cmds.textField(custom_plane_name, query=True, text=True)
+    if name_value == "":
+        name_value = "WallPlane_001"
+
+    created_plane = cmds.polyPlane(name=name_value, subdivisionsX=1, subdivisionsY=1, h=BRICK_COURSES, w=WALL_DEFAULT_LENGTH)
+    cmds.rotate(90, 0, 0, created_plane, relative=True)
+    cmds.textField(custom_plane_name, edit=True, text="")
+    cmds.currentUnit(linear=SCENE_MEASUREMENT_UNITS)
+
+# This function gets the current measurement units set in the scene.
+def GetCurrentMeasurements():
+    try:
+        SCENE_MEASUREMENT_UNITS = cmds.currentUnit(query=True, linear=True)
+    except ValueError as e:
+        cmds.warning("Invalid current measurement units: {}".format(e))
+    except RuntimeError as e:
+        cmds.warning("Error occured when getting the current measurement units: {}".format(e))
 
 
-class WC_Window(object):
-        
-    #constructor
-    def __init__(self):
-            
-        self.window = "WC_Window" # Start of Window 
-        self.title = "Maya Wall Maker"
-            
-        
-        if cmds.window(self.window, exists = True): # close old window is open
-            cmds.deleteUI(self.window, window=True)
-            
-        #create new window
-        self.window = cmds.window(self.window, title=self.title, widthHeight=(200, 200)) # Window Settings
-        
-        cmds.rowColumnLayout() # Start of Textfields and Buttons
-        cmds.separator( style='none', h=5 )
-        cmds.setParent('..')
-        cmds.rowColumnLayout( numberOfColumns=3, columnAttach=(1, 'right', 0), columnWidth=[(1, 80), (2, 5), (3, 175)] ) 
-        cmds.text( label='Brick Courses: ' )
-        cmds.separator( style='none', w=5 )
-        brick_courses_default = cmds.textField("BC_Check", pht="e.g. 60")
-        cmds.separator( style='none', h=5 )
-        cmds.setParent('..')
-        cmds.rowColumnLayout( numberOfColumns=3, columnAttach=(1, 'right', 0), columnWidth=[(1, 75), (2, 10), (3, 175)] )
-        cmds.text( label='Wall Length: ' )
-        cmds.separator( style='none', w=5 )
-        wall_length_default = cmds.textField("WL_Check", pht="e.g. 1400")
-        cmds.setParent('..')
-        cmds.columnLayout( adjustableColumn=True )
-        cmds.separator( style='none', h=15 )
-        cmds.button( label="CREATE WALL", align='center', w=100, h=50, command=functions.create_wall_btn)
-        cmds.separator( style='none', h=5 )
-        cmds.button( label="CREATE GUIDE", align='center', w=100, h=25, command=functions.guide_wall_btn )
-        cmds.separator( style='none', h=3 )
-        cmds.setParent('..')
-        cmds.rowColumnLayout()
-        cmds.button( label="Duplicate", align='center', w=60, h=25, ann="Duplicate Wall", command=functions.duplicate_wall_btn )
-        
-        
 
-        #display new window
-        cmds.showWindow()
-        
-        
-class functions:
-    
-    @staticmethod
-    def create_wall_btn(wall_length_default, *args):
-        cmds.currentUnit(linear = "centimeter") # Changes scene to CM
-        brick_courses_default = cmds.textField("BC_Check", q=True, text=True) # Sets brick_courses_default to the textfield input of BC_Check
-        wall_length_default = cmds.textField("WL_Check", q=True, text=True)
-        wall_height = int(brick_courses_default) * float(7.5) # Multiplies the brick course amount by 7.5 to get wall height
-        wall_length = float(wall_length_default) # Converts wall_length to a float
-        functions.last_wall_save = [wall_height, wall_length] # Saves them out to store for duplicate button
-        cmds.polyCube( n='HouseWall_001', sx=1, sy=1, sz=1, h=wall_height, w=wall_length, d=1 ) # Creates cube with the height and length
-        om.MGlobal.displayWarning("Wall made with " + str(wall_height) + "cm height and " + str(wall_length) + "cm length") # Displays message
-        cmds.textField("WL_Check", edit=True, text="") # Deletes text in textfield
-        cmds.textField("BC_Check", edit=True, text="")
-        
-    @staticmethod
-    def guide_wall_btn(wall_length_default, *args):
-        cmds.currentUnit(linear = "centimeter") # Changes scene to CM
-        brick_courses_default = cmds.textField("BC_Check", q=True, text=True)
-        wall_length_default = cmds.textField("WL_Check", q=True, text=True)
-        wall_height = int(brick_courses_default) * float(7.5)
-        wall_length = float(wall_length_default)
-        functions.last_wall_save = [wall_height, wall_length]
-        cmds.polyCube( n='GuideWall_001', sx=1, sy=1, sz=1, h=wall_height, w=wall_length, d=1,  )
-        om.MGlobal.displayWarning("Guide made with " + str(wall_height) + "cm height and " + str(wall_length) + "cm length") # Displays message
-        cmds.textField("WL_Check", edit=True, text="")
-        cmds.textField("BC_Check", edit=True, text="")
-        
-        
-        
-    @staticmethod
-    def duplicate_wall_btn(*args):
-        cmds.polyCube( n='DuplicatedWall_001', sx=1, sy=1, sz=1, h=functions.last_wall_save[0], w=functions.last_wall_save[1], d=1 ) # Grabs the saved data from above to use as height and length
-        om.MGlobal.displayInfo("Duplicate Made") # Displays message
-          
-                                   
-myWindow = WC_Window()
-# Made by Kieron
+# -------------------------- EXISTING WINDOW CHECK
+CheckWindowExists()
+GetCurrentMeasurements()
+
+# Creating the window
+builderWindow = cmds.window(WINDOW_CHECK, title=WINDOW_TITLE, widthHeight=(WINDOW_WIDTH, WINDOW_HEIGHT),
+                            maximizeButton=False, resizeToFitChildren=True)
+
+# -------------------------- WINDOW GUI LAYOUT
+cmds.columnLayout(adjustableColumn=True)
+
+cmds.separator(height=10, style='none')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+label = cmds.text(label="Brick Courses:", font='boldLabelFont')
+cmds.separator(width=10, style='none')
+
+cmds.setParent('..')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+brick_course_slider = cmds.floatSlider(min=1, max=120, value=60, step=1, dragCommand=UpdateWallInputs, width=450)
+cmds.separator(width=10, style='none')
+brick_course_text = cmds.text(label="60", font='boldLabelFont')
+cmds.separator(width=10, style='none')
+
+cmds.setParent('..')
+
+cmds.separator(height=10, style='none')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+label = cmds.text(label="Wall Length:", font='boldLabelFont')
+cmds.separator(width=10, style='none')
+
+cmds.setParent('..')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+wall_length_slider = cmds.floatSlider(min=1, max=2000, value=1000, step=0.01, dragCommand=UpdateWallInputs, width=450)
+cmds.separator(width=5, style='none')
+wall_length_text = cmds.floatField(minValue=1, maxValue=2000, value=1000, precision=2, step=0.01, width=45)
+cmds.separator(width=10, style='none')
+
+cmds.setParent('..')
+
+cmds.separator(height=5, style='none')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+cmds.text(label='Polygonal Plane Name: ', font='boldLabelFont')
+
+cmds.setParent('..')
+
+cmds.separator(height=5, style='none')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+custom_plane_name = cmds.textField(pht="Example: Ext_Wall_Mid_01", width=500)
+
+cmds.setParent('..')
+
+cmds.separator(height=10, style='none')
+cmds.separator(width=450, style='double')
+cmds.separator(height=10, style='none')
+
+cmds.rowColumnLayout(numberOfRows=1)
+
+cmds.separator(width=5, style='none')
+cmds.button(label='Create Polygonal Plane', width=500, height=30,
+            annotation="Creates a Polygonal Plane at 0, 0, 0 with the given Courses and Length", bgc=(105, 150, 246),
+            command=lambda *args: CreateWallPlane(cmds.floatSlider(brick_course_slider, query=True, value=True),
+                                                  cmds.floatSlider(wall_length_slider, query=True, value=True)))
+
+cmds.setParent('..')
+
+cmds.separator(height=5, style='none')
+
+cmds.showWindow(builderWindow)
+cmds.dockControl(area='right', floating=False, content=WINDOW_CHECK, width=WINDOW_WIDTH, label=WINDOW_TITLE)
