@@ -15,13 +15,6 @@ The **Wall Builder** was created to make life easier for artists working out dim
 
 ## Using the wall builder
 To use the wall builder enter the amount of brick courses in the first input box and the overall length in the second and click 'Create Wall' and a wall will be created in your Maya scene.
-  
-## Installing and Importing a .pyc file
-1. To **install** the toolbox.pyc file navigate to your scripts folder (Drive:\Users\[Name]\Documents\maya\[Version]\scripts)
-2. **Copy and Paste** toolbox.pyc into the scripts folder.
-3. Launch / Restart Maya.
-4. In Maya, open a **Python Tab** in the **Script Editor** and execute:
-5. **import wall_builder as wb** _and_ **wb.WC_Window()** in the same tab
 
 ![Readme banner image](./static/builder-pic-banner.png)
 
